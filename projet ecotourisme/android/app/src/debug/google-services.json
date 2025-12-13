@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1069706226664",
+    "project_id": "ecoutourisme",
+    "storage_bucket": "ecoutourisme.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069706226664:android:2b547865cbdefad390d25d",
+        "android_client_info": {
+          "package_name": "com.ecoguide.ecoguide"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1069706226664-sjohbv2njhccq90l4k139ej6jhi2o61t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ecoguide.ecoguide",
+            "certificate_hash": "2563ec3d4ee4e66f42d520e407edf25b8dbf6b6f"
+          }
+        },
+        {
+          "client_id": "1069706226664-gll7skcn5qa75c8se49ds687o4gfq5nu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBV6kGNnyWyKsZhMeKFYTul0qNkZJcb_7k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1069706226664-gll7skcn5qa75c8se49ds687o4gfq5nu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1069706226664-0nf7laqi9jqbd6mha1ktrf7m3h2u1gn4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ecoguide.ecoguide"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
