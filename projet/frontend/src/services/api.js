@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8086/api';
+export const API_BASE_URL = 'http://localhost:8086/api';
 
 const getHeaders = () => {
     const token = localStorage.getItem('token');
@@ -172,5 +172,32 @@ export const vehiclesAPI = {
             headers: getHeaders()
         });
         if (!response.ok) throw new Error('Failed to delete vehicle');
+    }
+};
+
+// Incidents API
+export const incidentsAPI = {
+    create: async (incident) => {
+        const response = await fetch(`${API_BASE_URL}/incidents`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(incident)
+        });
+        if (!response.ok) throw new Error('Failed to report incident');
+        return response.json();
+    },
+
+    getAll: async () => {
+        const response = await fetch(`${API_BASE_URL}/incidents`, { headers: getHeaders() });
+        if (!response.ok) throw new Error('Failed to fetch incidents');
+        return response.json();
+    },
+
+    delete: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/incidents/${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+        if (!response.ok) throw new Error('Failed to delete incident');
     }
 };

@@ -35,6 +35,7 @@ class CollectionPointServiceTest {
                 "1",
                 location,
                 CollectionPoint.WasteType.PLASTIC,
+                1000.0, // Default Capacity
                 95,
                 CollectionPoint.Status.ACTIVE,
                 LocalDateTime.now()

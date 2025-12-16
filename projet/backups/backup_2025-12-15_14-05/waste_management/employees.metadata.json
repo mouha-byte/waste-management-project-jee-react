@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"role":{"$numberInt":"1"}},"name":"role_1"},{"v":{"$numberInt":"2"},"key":{"role":{"$numberInt":"-1"}},"name":"role_-1"}],"uuid":"38a417c4697d45a5a6caa8fd8b28b403","collectionName":"employees","type":"collection"}

@@ -10,6 +10,7 @@ import VehicleForm from './components/VehicleForm';
 import RoutesList from './components/RoutesList';
 import MapComponent from './components/MapComponent';
 import Statistics from './components/Statistics'; // Import Statistics
+import ServerMonitor from './components/ServerMonitor'; // Import Monitor
 import { AuthProvider, useAuth } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -24,11 +25,17 @@ function AppContent() {
     const { theme, toggleTheme } = useTheme();
     const { t, i18n } = useTranslation();
 
-    // Generic handler for editing items
     const handleEdit = (item, viewName) => {
         setEditingItem(item);
         setCurrentView(viewName);
     };
+
+    // Redirect Driver away from Dashboard
+    React.useEffect(() => {
+        if (user && user.role === 'DRIVER' && (currentView === 'dashboard' || currentView === 'stats')) {
+            setCurrentView('routes');
+        }
+    }, [user]);
 
     const handleSave = () => {
         setEditingItem(null);
@@ -97,13 +104,14 @@ function AppContent() {
                     </div>
 
                     <nav style={{ flex: 1 }}>
-                        <SidebarItem id="dashboard" icon="📊" label={t('dashboard')} />
-                        <SidebarItem id="stats" icon="📈" label={t('stats.title') || 'Statistics'} />
-                        <SidebarItem id="map" icon="🌍" label={t('map.title')} />
+                        <SidebarItem id="dashboard" icon="📊" label={t('dashboard')} restrictedTo={['ADMIN', 'MANAGER']} />
+                        <SidebarItem id="stats" icon="📈" label={t('stats.title') || 'Statistics'} restrictedTo={['ADMIN', 'MANAGER']} />
+                        <SidebarItem id="map" icon="🌍" label={t('map.title')} restrictedTo={['ADMIN', 'MANAGER']} />
                         <SidebarItem id="routes" icon="🗺️" label={t('routes')} />
-                        <SidebarItem id="points" icon="📍" label={t('points')} />
-                        <SidebarItem id="employees" icon="👷" label={t('employees')} restrictedTo={['ADMIN', 'MANAGER']} />
-                        <SidebarItem id="vehicles" icon="🚛" label={t('vehicles')} restrictedTo={['ADMIN', 'MANAGER']} />
+                        <SidebarItem id="points" icon="📍" label={t('points')} restrictedTo={['ADMIN']} />
+                        <SidebarItem id="employees" icon="👷" label={t('employees')} restrictedTo={['ADMIN']} />
+                        <SidebarItem id="vehicles" icon="🚛" label={t('vehicles')} restrictedTo={['ADMIN']} />
+                        <SidebarItem id="monitor" icon="🖥️" label="System" restrictedTo={['ADMIN']} />
                     </nav>
 
                     {/* Settings / Toggles */}
@@ -141,36 +149,57 @@ function AppContent() {
 
                 {/* Main Content */}
                 <div className="main-content" style={{ flex: 1, background: 'var(--bg-primary)', color: 'var(--text-primary)', overflowY: 'auto', padding: '30px', transition: 'background 0.3s' }}>
-                    {currentView === 'dashboard' && <Dashboard />}
+                    {currentView === 'dashboard' && (
+                        <PrivateRoute roles={['ADMIN', 'MANAGER']}>
+                            <Dashboard />
+                        </PrivateRoute>
+                    )}
                     {currentView === 'map' && <MapComponent height="85vh" />}
 
-                    {currentView === 'points' && <PointsList onEdit={(item) => handleEdit(item, 'pointForm')} />}
-                    {currentView === 'pointForm' && <PointForm point={editingItem} onSave={handleSave} onCancel={handleCancel} />}
+                    {currentView === 'points' && (
+                        <PrivateRoute roles={['ADMIN']}>
+                            <PointsList onEdit={(item) => handleEdit(item, 'pointForm')} />
+                        </PrivateRoute>
+                    )}
+                    {currentView === 'pointForm' && (
+                        <PrivateRoute roles={['ADMIN']}>
+                            <PointForm point={editingItem} onSave={handleSave} onCancel={handleCancel} />
+                        </PrivateRoute>
+                    )}
 
                     {currentView === 'employees' && (
-                        <PrivateRoute roles={['ADMIN', 'MANAGER']}>
+                        <PrivateRoute roles={['ADMIN']}>
                             <EmployeesList onEdit={(item) => handleEdit(item, 'employeeForm')} />
                         </PrivateRoute>
                     )}
                     {currentView === 'employeeForm' && (
-                        <PrivateRoute roles={['ADMIN', 'MANAGER']}>
+                        <PrivateRoute roles={['ADMIN']}>
                             <EmployeeForm employee={editingItem} onSave={handleSave} onCancel={handleCancel} />
                         </PrivateRoute>
                     )}
 
                     {currentView === 'vehicles' && (
-                        <PrivateRoute roles={['ADMIN', 'MANAGER']}>
+                        <PrivateRoute roles={['ADMIN']}>
                             <VehiclesList onEdit={(item) => handleEdit(item, 'vehicleForm')} />
                         </PrivateRoute>
                     )}
                     {currentView === 'vehicleForm' && (
-                        <PrivateRoute roles={['ADMIN', 'MANAGER']}>
+                        <PrivateRoute roles={['ADMIN']}>
                             <VehicleForm vehicle={editingItem} onSave={handleSave} onCancel={handleCancel} />
                         </PrivateRoute>
                     )}
 
                     {currentView === 'routes' && <RoutesList />}
-                    {currentView === 'stats' && <Statistics />}
+                    {currentView === 'stats' && (
+                        <PrivateRoute roles={['ADMIN', 'MANAGER']}>
+                            <Statistics />
+                        </PrivateRoute>
+                    )}
+                    {currentView === 'monitor' && (
+                        <PrivateRoute roles={['ADMIN']}>
+                            <ServerMonitor />
+                        </PrivateRoute>
+                    )}
                 </div>
 
                 {/* Help Modal */}

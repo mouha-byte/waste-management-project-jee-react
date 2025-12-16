@@ -40,24 +40,28 @@ class RouteServiceTest {
         CollectionPoint point1 = new CollectionPoint();
         point1.setId("point1");
         point1.setFillLevel(85);
+        point1.setLocation(new Location(36.8, 10.1, "Address 1"));
         
         CollectionPoint point2 = new CollectionPoint();
         point2.setId("point2");
         point2.setFillLevel(95);
+        point2.setLocation(new Location(36.8, 10.1, "Address 2"));
         
         CollectionPoint point3 = new CollectionPoint();
         point3.setId("point3");
         point3.setFillLevel(82);
+        point3.setLocation(new Location(36.8, 10.1, "Address 3"));
         
         List<CollectionPoint> needyPoints = Arrays.asList(point1, point2, point3);
         
         Vehicle vehicle = new Vehicle();
         vehicle.setId("vehicle1");
-        vehicle.setCapacity(1000);
+        vehicle.setCapacity(3000); // Increased capacity to fit all points (Total ~2620kg)
         vehicle.setPlateNumber("AB-123-CD");
         
         Employee employee = new Employee();
         employee.setId("emp1");
+        employee.setRole(Employee.Role.DRIVER); // Must be DRIVER for new logic
         
         when(collectionPointService.getPointsNeedingCollection()).thenReturn(needyPoints);
         when(vehicleService.getAvailableVehicles()).thenReturn(Arrays.asList(vehicle));

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collectionPointsAPI, routesAPI } from '../services/api';
+import { collectionPointsAPI, routesAPI, incidentsAPI } from '../services/api';
 import MapComponent from './MapComponent';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -8,9 +8,11 @@ function Dashboard() {
     const [alerts, setAlerts] = useState([]);
     const [points, setPoints] = useState([]);
     const [routes, setRoutes] = useState([]);
+    const [incidents, setIncidents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [generating, setGenerating] = useState(false);
+    const [showAllActiveRoutes, setShowAllActiveRoutes] = useState(false);
 
     useEffect(() => {
         loadDashboardData();
@@ -19,15 +21,17 @@ function Dashboard() {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            const [alertsData, pointsData, routesData] = await Promise.all([
+            const [alertsData, pointsData, routesData, incidentsData] = await Promise.all([
                 collectionPointsAPI.getAlerts(),
                 collectionPointsAPI.getAll(),
-                routesAPI.getAll()
+                routesAPI.getAll(),
+                incidentsAPI.getAll()
             ]);
 
             setAlerts(alertsData);
             setPoints(pointsData);
             setRoutes(routesData);
+            setIncidents(incidentsData);
             setError(null);
         } catch (err) {
             setError('Failed to load dashboard data: ' + err.message);
@@ -115,6 +119,24 @@ function Dashboard() {
             theme: 'striped'
         });
 
+        // Incidents Section
+        if (incidents.length > 0) {
+            const finalY = doc.lastAutoTable.finalY || 50;
+            doc.text('Reported Incidents', 14, finalY + 15);
+
+            autoTable(doc, {
+                startY: finalY + 20,
+                head: [['Date', 'Type', 'Description']],
+                body: incidents.map(i => [
+                    new Date(i.date).toLocaleDateString(),
+                    i.type,
+                    i.description
+                ]),
+                theme: 'grid',
+                headStyles: { fillColor: [237, 137, 54] } // Orange
+            });
+        }
+
         doc.save('waste-management-report.pdf');
     };
 
@@ -142,6 +164,9 @@ function Dashboard() {
     }
 
     const stats = calculateStats();
+
+    const activeRoutes = routes.filter(r => r.status === 'IN_PROGRESS');
+    const visibleActiveRoutes = showAllActiveRoutes ? activeRoutes : activeRoutes.slice(0, 5);
 
     return (
         <div>
@@ -219,11 +244,12 @@ function Dashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                     {/* Active Routes */}
-                    {routes.filter(r => r.status === 'IN_PROGRESS').length > 0 && (
+                    {/* Active Routes */}
+                    {activeRoutes.length > 0 && (
                         <div>
                             <h3 style={{ marginBottom: '15px', color: '#3182ce' }}>🚀 Active Routes</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {routes.filter(r => r.status === 'IN_PROGRESS').map(route => (
+                                {visibleActiveRoutes.map(route => (
                                     <div key={route.id} className="dashboard-card" style={{ borderLeftColor: '#3182ce', margin: 0 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <h4 style={{ margin: 0 }}>Route #{route.id.slice(-6)}</h4>
@@ -236,6 +262,24 @@ function Dashboard() {
                                     </div>
                                 ))}
                             </div>
+                            {activeRoutes.length > 5 && (
+                                <button
+                                    onClick={() => setShowAllActiveRoutes(!showAllActiveRoutes)}
+                                    style={{
+                                        marginTop: '10px',
+                                        width: '100%',
+                                        padding: '8px',
+                                        background: 'transparent',
+                                        border: '1px solid #3182ce',
+                                        color: '#3182ce',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontSize: '0.9rem'
+                                    }}
+                                >
+                                    {showAllActiveRoutes ? 'Show Less' : `Show ${activeRoutes.length - 5} More`}
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -274,6 +318,32 @@ function Dashboard() {
                                 ✅ No active alerts. Great job!
                             </div>
                         )}
+
+                        {/* Recent Incidents Section */}
+                        <div style={{ marginTop: '30px' }}>
+                            <h3 style={{ marginBottom: '15px', color: '#ed8936' }}>
+                                ⚠️ Reported Incidents ({incidents.length})
+                            </h3>
+                            {incidents.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto' }}>
+                                    {incidents.slice(0, 5).map((incident) => (
+                                        <div key={incident.id} className="dashboard-card" style={{ borderLeftColor: '#ed8936', padding: '15px', margin: 0 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <strong>{incident.type}</strong>
+                                                <small>{new Date(incident.date).toLocaleDateString()}</small>
+                                            </div>
+                                            <p style={{ margin: '5px 0', color: '#555', fontSize: '0.9em' }}>
+                                                {incident.description}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ padding: '20px', background: '#fffaf0', borderRadius: '8px', color: '#dd6b20', textAlign: 'center' }}>
+                                    No reported incidents.
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,3 @@
+com\waste\controller\AuthControllerTest.class
+com\waste\service\CollectionPointServiceTest.class
+com\waste\service\RouteServiceTest.class

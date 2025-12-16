@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { routesAPI } from '../services/api';
+import { routesAPI, incidentsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import MapComponent from './MapComponent';
 
 function RoutesList() {
@@ -7,6 +8,9 @@ function RoutesList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedRoute, setSelectedRoute] = useState(null); // For modal
+    const [showIncidentModal, setShowIncidentModal] = useState(false);
+    const [incidentForm, setIncidentForm] = useState({ type: 'BIN_DAMAGED', description: '' });
+    const { user } = useAuth();
 
     useEffect(() => {
         loadRoutes();
@@ -52,15 +56,22 @@ function RoutesList() {
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h2>Routes Management</h2>
-                <button className="btn btn-success" onClick={async () => {
-                    try {
-                        await routesAPI.generateOptimized();
-                        loadRoutes();
-                        alert('Route generated!');
-                    } catch (e) { alert(e.message); }
-                }}>
-                    🚛 Generate New Route
-                </button>
+                <div>
+                    <button className="btn btn-warning" style={{ marginRight: '10px' }} onClick={() => setShowIncidentModal(true)}>
+                        ⚠️ Report Issue
+                    </button>
+                    {['ADMIN', 'MANAGER'].includes(user?.role) && (
+                        <button className="btn btn-success" onClick={async () => {
+                            try {
+                                await routesAPI.generateOptimized();
+                                loadRoutes();
+                                alert('Route generated!');
+                            } catch (e) { alert(e.message); }
+                        }}>
+                            🚛 Generate New Route
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error && <div className="alert-box error">{error}</div>}
@@ -103,7 +114,9 @@ function RoutesList() {
                                     {route.status === 'IN_PROGRESS' && (
                                         <button className="btn btn-success" onClick={() => handleStatusUpdate(route.id, 'COMPLETED')} style={{ padding: '6px 12px', fontSize: '12px' }}>Complete</button>
                                     )}
-                                    <button className="btn btn-danger" onClick={() => handleDelete(route.id)} style={{ padding: '6px 12px', fontSize: '12px' }}>Delete</button>
+                                    {['ADMIN', 'MANAGER'].includes(user?.role) && (
+                                        <button className="btn btn-danger" onClick={() => handleDelete(route.id)} style={{ padding: '6px 12px', fontSize: '12px' }}>Delete</button>
+                                    )}
                                 </div>
                             </td>
                         </tr>
@@ -227,6 +240,63 @@ function RoutesList() {
                     padding-top: 10px;
                 }
             `}</style>
+            {/* Incident Reporting Modal */}
+            {showIncidentModal && (
+                <div className="modal-overlay" onClick={() => setShowIncidentModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                        <div className="modal-header">
+                            <h3>⚠️ Report Incident</h3>
+                            <button className="close-btn" onClick={() => setShowIncidentModal(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                try {
+                                    await incidentsAPI.create(incidentForm);
+                                    alert('Incident reported successfully! Admin notified.');
+                                    setShowIncidentModal(false);
+                                    setIncidentForm({ type: 'BIN_DAMAGED', description: '' });
+                                } catch (err) {
+                                    alert(err.message);
+                                }
+                            }}>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px' }}>Issue Type</label>
+                                    <select
+                                        className="form-control"
+                                        value={incidentForm.type}
+                                        onChange={e => setIncidentForm({ ...incidentForm, type: e.target.value })}
+                                        style={{ width: '100%', padding: '8px' }}
+                                    >
+                                        <option value="BIN_DAMAGED">Bin Damaged</option>
+                                        <option value="ILLEGAL_DUMPING">Illegal Dumping</option>
+                                        <option value="ACCESS_BLOCKED">Access Blocked</option>
+                                        <option value="VEHICLE_ISSUE">Vehicle Issue</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px' }}>Description</label>
+                                    <textarea
+                                        className="form-control"
+                                        rows="4"
+                                        value={incidentForm.description}
+                                        onChange={e => setIncidentForm({ ...incidentForm, description: e.target.value })}
+                                        style={{ width: '100%', padding: '8px' }}
+                                        required
+                                        placeholder="Describe the issue clearly..."
+                                    ></textarea>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setShowIncidentModal(false)} style={{ marginRight: '10px' }}>Cancel</button>
+                                    <button type="submit" className="btn btn-warning">Submit Report</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

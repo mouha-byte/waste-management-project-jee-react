@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -14,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -30,10 +32,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // Allow login/register
                 .requestMatchers("/api/performance/**").permitAll() // Allow testing endpoints
-                .requestMatchers("/api/points/**").hasAnyRole("ADMIN", "MANAGER", "DRIVER")
-                .requestMatchers("/api/employees/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers("/api/vehicles/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers("/api/points/**").hasRole("ADMIN") // CRUD only for Admin
+                .requestMatchers("/api/employees/**").hasRole("ADMIN") // CRUD only for Admin
+                .requestMatchers("/api/vehicles/**").hasRole("ADMIN") // CRUD only for Admin
+                .requestMatchers("/api/monitoring/**").permitAll() // Public access as requested
                 .requestMatchers("/api/routes/**").hasAnyRole("ADMIN", "MANAGER", "DRIVER")
+                .requestMatchers("/api/incidents/**").authenticated() // Fine-grained control with @PreAuthorize
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
